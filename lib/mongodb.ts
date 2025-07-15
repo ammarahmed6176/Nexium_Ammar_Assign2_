@@ -1,20 +1,22 @@
-import { MongoClient } from 'mongodb'
+// lib/mongodb.ts
+
+import { MongoClient, Db } from 'mongodb'
 
 const uri = process.env.MONGODB_URI
 
 if (!uri) {
-  throw new Error('❌ MONGODB_URI is not set in .env.local')
+  throw new Error('❌ MONGODB_URI is not defined in environment variables')
 }
 
 let client: MongoClient | null = null
-let db: ReturnType<MongoClient['db']> | null = null
+let db: Db | null = null
 
 export async function saveToMongoDB(data: { url: string; fullText: string }) {
   try {
     if (!client || !db) {
-      client = new MongoClient(uri)
+      client = new MongoClient(uri as string) // ✅ assert type as string
       await client.connect()
-      db = client.db('blogdb') // You can rename this
+      db = client.db('blogdb')
     }
 
     const collection = db.collection('blogs')
@@ -24,8 +26,8 @@ export async function saveToMongoDB(data: { url: string; fullText: string }) {
     })
 
     console.log('✅ MongoDB insert successful')
-  } catch (error: unknown) {
-    console.error('❌ MongoDB insert failed:', (error as Error).message)
+  } catch (error) {
+    console.error('❌ MongoDB insert failed:', error)
     throw error
   }
 }
